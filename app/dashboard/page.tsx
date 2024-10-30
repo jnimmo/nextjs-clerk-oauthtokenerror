@@ -1,5 +1,6 @@
-import { UserDetails } from "../components/user-details";
+import { PointerC, Row, UserDetails } from "../components/user-details";
 import { OrganizationSwitcher, UserButton } from "@clerk/nextjs";
+import { auth, clerkClient, currentUser } from "@clerk/nextjs/server";
 import { CodeSwitcher } from "../components/code-switcher";
 import { LearnMore } from "../components/learn-more";
 import { Footer } from "../components/footer";
@@ -9,6 +10,29 @@ import { NextLogo } from "../components/next-logo";
 import { DASHBOARD_CARDS } from "../consts/cards";
 
 export default async function DashboardPage() {
+  const { userId, debug } = auth();
+  if (!userId) {
+    throw new Error("Not authenticated");
+  }
+
+  // const user = await currentUser();
+
+  let totalCount = 0;
+  let oauthError: {
+    clerkTraceId?: string;
+    errors: { code: string; message: string }[];
+  } | null = null;
+  try {
+    ({ totalCount } = await clerkClient().users.getUserOauthAccessToken(
+      userId,
+      "oauth_google"
+    ));
+  } catch (error) {
+    console.error("Error fetching OAuth access token:", error);
+    console.log(debug());
+    oauthError = error;
+  }
+
   return (
     <>
       <main className="max-w-[75rem] w-full mx-auto">
@@ -21,13 +45,13 @@ export default async function DashboardPage() {
                 <NextLogo />
               </div>
               <div className="flex items-center gap-2">
-                <OrganizationSwitcher
+                {/* <OrganizationSwitcher
                   appearance={{
                     elements: {
                       organizationPreviewAvatarBox: "size-6",
                     },
                   }}
-                />
+                /> */}
                 <UserButton
                   afterSignOutUrl="/"
                   appearance={{
@@ -42,6 +66,25 @@ export default async function DashboardPage() {
           </div>
           <div className="pt-[3.5rem]">
             <CodeSwitcher />
+          </div>
+          <div className="px-2.5 bg-[#FAFAFB] rounded-lg divide-y divide-[#EEEEF0]">
+            <Row desc="Google OAuth Tokens" value={totalCount.toString()} />
+            {oauthError ? (
+              <>
+                <Row
+                  desc="Clerk Trace ID"
+                  value={oauthError.clerkTraceId || "N/A"}
+                />
+                <Row
+                  desc="Clerk Error Code"
+                  value={oauthError.errors[0].code || "N/A"}
+                />
+                <Row
+                  desc="Clerk Error Message"
+                  value={oauthError.errors[0].message || "N/A"}
+                />
+              </>
+            ) : null}
           </div>
         </div>
       </main>

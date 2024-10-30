@@ -2,14 +2,14 @@
 
 import { useOrganization, useSession, useUser } from "@clerk/nextjs";
 
-function Row({
+export function Row({
   desc,
   value,
   children,
 }: {
   desc: string;
   value: string;
-  children: React.ReactNode;
+  children?: React.ReactNode;
 }) {
   return (
     <div className="h-[2.125rem] grid grid-cols-2 items-center relative">
@@ -22,7 +22,7 @@ function Row({
   );
 }
 
-function PointerC({ label }: { label: string }) {
+export function PointerC({ label }: { label: string }) {
   return (
     <div className="absolute w-fit flex items-center gap-5 top-1/2 -translate-y-1/2 left-full">
       <div className="relative">
